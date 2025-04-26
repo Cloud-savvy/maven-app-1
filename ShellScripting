@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+    
+    tools {
+        maven "Maven3"
+        jdk "Java17"
+    }
+    
+    stages {
+        stage('Git Clone') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Cloud-savvy/maven-app-1.git'
+            }
+        }
+        stage('Compile') {
+            steps {
+                sh 'mvn compile'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        stage('Artifacts') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('Deploy to Container') {
+            steps {
+                deploy adapters: [tomcat9(credentialsId: 'tomcat-creds', path: '', url: 'http://http://3.84.149.120:9090')], contextPath: 'myapp', war: '**/target/*.war'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Build successful!'
+        }
+        failure {
+            echo 'Build failed'
+        }
+    }
+}
